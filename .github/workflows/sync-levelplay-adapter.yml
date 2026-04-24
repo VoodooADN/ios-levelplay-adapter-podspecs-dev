@@ -1,0 +1,66 @@
+# Syncs the official IronSourceVoodooAdapter podspec (CocoaPods trunk) into
+# this repo as VoodooIronSourceAdapter when a new adapter version appears.
+name: Sync LevelPlay adapter
+
+on:
+  workflow_dispatch:
+    inputs:
+      ironsource_sdk_version:
+        description: "The exact version of 'IronSourceSDK' to use (e.g. 9.3.0.0)"
+        required: false
+        default: "9.3.0.0"
+
+concurrency:
+  group: sync-levelplay-adapter
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Tools
+        run: |
+          brew bundle
+
+      - name: CocoaPods version
+        run: |
+          pod --version
+
+      - name: Sync LevelPlay adapter podspec
+        run: |
+          OFFICIAL_LEVELPLAY_ADAPTER_POD_NAME="IronSourceVoodooAdapter"
+          ADN_LEVELPLAY_ADAPTER_POD_NAME="VoodooIronSourceAdapter"
+          OFFICIAL_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH="${OFFICIAL_LEVELPLAY_ADAPTER_POD_NAME}.podspec.json"
+          ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH="${ADN_LEVELPLAY_ADAPTER_POD_NAME}.podspec"
+          IRONSOURCE_SDK_VERSION="${{ github.event.inputs.ironsource_sdk_version }}"
+
+          ./scripts/get_latest_podspec.sh ${OFFICIAL_LEVELPLAY_ADAPTER_POD_NAME} > ${OFFICIAL_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH}
+          ./scripts/generate_podspec.sh ${OFFICIAL_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH} ${ADN_LEVELPLAY_ADAPTER_POD_NAME} ${IRONSOURCE_SDK_VERSION} > ${ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH}
+          
+          pod spec lint ${ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH} --allow-warnings
+          
+          ./scripts/add_podspec.sh ${ADN_LEVELPLAY_ADAPTER_POD_NAME}.podspec
+
+          rm ${OFFICIAL_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH}
+
+      - name: Setup Git User
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Commit Changes
+        run: |
+          git add .
+          
+          if git diff --cached --quiet; then
+            echo "No change to commit"
+          else
+            git commit -m "Levelplay adapter podspec synced"
+            git push
+          fi
