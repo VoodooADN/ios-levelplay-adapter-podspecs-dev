@@ -3,21 +3,18 @@ set -euo pipefail
 
 DEFAULT_IRONSOURCE_SDK_VERSION="9.3.0.0"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
-
-usage() {
-  echo "Usage: ${SCRIPT_NAME} <path_to_podspec_source> <pod_name> <ironsource_sdk_version=${DEFAULT_IRONSOURCE_SDK_VERSION}>" >&2
-  echo "  path_to_podspec_source: the original json podspec source file" >&2
-  echo "  pod_name: the name of the pod to generate the podspec for" >&2
-  echo "  ironsource_sdk_version: the version of the IronSourceSDK to use (optional)" >&2
+if [[ $# -lt 2 ]]; then
+  SCRIPT_NAME=$(basename "$0")
+  echo "Usage: ${SCRIPT_NAME} <path_to_podspec_source> <pod_name> <ironsource_sdk_version=${DEFAULT_IRONSOURCE_SDK_VERSION}>"
+  echo
+  echo "Arguments:"
+  echo "  path_to_podspec_source: the original json podspec source file"
+  echo "  pod_name: the name of the pod to generate the podspec for"
+  echo "  ironsource_sdk_version: the version of the IronSourceSDK to use (optional)"
+  echo
   echo "Example:"
   echo "  ${SCRIPT_NAME} IronSourceVoodooAdapter.podspec VoodooIronSourceAdapter"
   exit 1
-}
-
-if [[ $# -lt 2 ]]; then
-  usage
 fi
 
 ORIGINAL_PODSPEC_FILE_PATH=$1
@@ -26,25 +23,25 @@ IRONSOURCE_SDK_VERSION="${3:-$DEFAULT_IRONSOURCE_SDK_VERSION}"
 
 # jq is required to parse the original podspec file
 if ! command -v jq >/dev/null 2>&1; then
-  echo "error: jq is required" >&2
+  echo "❌ Error: jq is required" >&2
   exit 1
 fi
 
 # check if the original podspec file exists
 if [[ ! -f "${ORIGINAL_PODSPEC_FILE_PATH}" ]]; then
-  echo "error: not a file: $path" >&2
+  echo "❌ Error: not a file: ${ORIGINAL_PODSPEC_FILE_PATH}" >&2
   exit 1
 fi
 
 # get the VoodooAdn dependency from the original podspec file
 VOODOOADN_DEPENDENCY=$(jq -r '((.dependencies // {}).VoodooAdn // []) | if length > 0 then .[0] else empty end' "${ORIGINAL_PODSPEC_FILE_PATH}")
 if [[ -z "${VOODOOADN_DEPENDENCY}" ]]; then
-  echo "error: VoodooAdn dependency missing in JSON" >&2
+  echo "❌ Error: VoodooAdn dependency missing in JSON podspec file: ${ORIGINAL_PODSPEC_FILE_PATH}" >&2
   exit 1
 fi
 ADN_SDK_VERSION=$(printf '%s' "${VOODOOADN_DEPENDENCY}" | sed -E 's/^[~=><]+[[:space:]]*//')
 if [[ -z "${ADN_SDK_VERSION}" ]]; then
-  echo "error: could not determine ADN min version" >&2
+  echo "❌ Error: could not determine ADN SDK min version" >&2
   exit 1
 fi
 
