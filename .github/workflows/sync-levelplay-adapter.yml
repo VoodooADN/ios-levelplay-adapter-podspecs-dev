@@ -79,11 +79,18 @@ jobs:
       - name: Commit Changes
         run: |
           git add .
-          
+
           if git diff --cached --quiet; then
             echo "No change to commit"
           else
-            git commit -m "Levelplay adapter podspec synced"
+            PODSPEC_VERSION=$(
+              git diff --cached --name-only | awk -F/ '/\.podspec$/ && NF >= 3 {print $(NF-1); exit}'
+            )
+            if [ -n "$PODSPEC_VERSION" ]; then
+              git commit -m "Levelplay adapter podspec synced (version ($PODSPEC_VERSION))"
+            else
+              git commit -m "Levelplay adapter podspec synced"
+            fi
             git push
-          echo "✅ Changes pushed"
+            echo "✅ Changes pushed"
           fi
