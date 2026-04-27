@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       ironsource_sdk_version:
-        description: "The exact version of 'IronSourceSDK' to use (e.g. 9.3.0.0)"
+        description: "The exact version of 'IronSourceSDK' to use"
         required: false
         default: "9.3.0.0"
 
@@ -87,7 +87,7 @@ jobs:
               git diff --cached --name-only | awk -F/ '/\.podspec$/ && NF >= 3 {print $(NF-1); exit}'
             )
             if [ -n "$PODSPEC_VERSION" ]; then
-              git commit -m "Levelplay adapter podspec synced (version ($PODSPEC_VERSION))"
+              git commit -m "Levelplay adapter podspec synced (version $PODSPEC_VERSION)"
             else
               git commit -m "Levelplay adapter podspec synced"
             fi
