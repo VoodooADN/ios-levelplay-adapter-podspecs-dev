@@ -39,6 +39,7 @@ jobs:
           OFFICIAL_LEVELPLAY_ADAPTER_POD_NAME="IronSourceVoodooAdapter"
           ADN_LEVELPLAY_ADAPTER_POD_NAME="VoodooIronSourceAdapter"
           OFFICIAL_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH="${OFFICIAL_LEVELPLAY_ADAPTER_POD_NAME}.podspec.json"
+          ADN_LEVELPLAY_ADAPTER_JSON_PODSPEC_FILE_PATH="${ADN_LEVELPLAY_ADAPTER_POD_NAME}.podspec.json"
           ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH="${ADN_LEVELPLAY_ADAPTER_POD_NAME}.podspec"
           IRONSOURCE_SDK_VERSION="${{ github.event.inputs.ironsource_sdk_version }}"
 
@@ -49,12 +50,13 @@ jobs:
 
           echo
           echo "🔍 Generating podspec ${ADN_LEVELPLAY_ADAPTER_POD_NAME}..."
-          ./scripts/generate_podspec.sh ${OFFICIAL_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH} ${ADN_LEVELPLAY_ADAPTER_POD_NAME} ${IRONSOURCE_SDK_VERSION} > ${ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH}
+          ./scripts/generate_podspec.sh ${OFFICIAL_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH} ${ADN_LEVELPLAY_ADAPTER_POD_NAME} ${IRONSOURCE_SDK_VERSION}
           echo "✅ Podspec generated"
 
           echo
           echo "🔍 Linting podspec ${ADN_LEVELPLAY_ADAPTER_POD_NAME}..."
           pod spec lint ${ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH} --allow-warnings
+          pod spec lint ${ADN_LEVELPLAY_ADAPTER_JSON_PODSPEC_FILE_PATH} --allow-warnings
           echo "✅ Podspec linted"
           
           echo
@@ -65,7 +67,8 @@ jobs:
           echo
           echo "🧹 Cleaning up..."
           rm -f ${OFFICIAL_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH} \
-            ${ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH}
+            ${ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH} \
+            ${ADN_LEVELPLAY_ADAPTER_JSON_PODSPEC_FILE_PATH}
           echo "✅ Cleaned up"
 
       - name: Setup Git User
