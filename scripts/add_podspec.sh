@@ -46,4 +46,9 @@ else
   # add the podspec to the podspec repo
   mkdir -p "${PODSPEC_DIRECTORY_FINAL_PATH}"
   mv "${PODSPEC_FILE_PATH}" "${PODSPEC_DIRECTORY_FINAL_PATH}"
+
+  PODSPEC_JSON_FILE_PATH="${PODSPEC_FILE_PATH}.json"
+  if [[ -f "${PODSPEC_JSON_FILE_PATH}" ]]; then
+    mv "${PODSPEC_JSON_FILE_PATH}" "${PODSPEC_DIRECTORY_FINAL_PATH}"
+  fi
 fi

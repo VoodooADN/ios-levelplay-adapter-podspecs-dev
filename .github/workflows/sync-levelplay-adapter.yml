@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       ironsource_sdk_version:
-        description: "The exact version of 'IronSourceSDK' to use (e.g. 9.3.0.0)"
+        description: "The exact version of 'IronSourceSDK' to use"
         required: false
         default: "9.3.0.0"
 
@@ -40,6 +40,7 @@ jobs:
           ADN_LEVELPLAY_ADAPTER_POD_NAME="VoodooIronSourceAdapter"
           OFFICIAL_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH="${OFFICIAL_LEVELPLAY_ADAPTER_POD_NAME}.podspec.json"
           ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH="${ADN_LEVELPLAY_ADAPTER_POD_NAME}.podspec"
+          ADN_LEVELPLAY_ADAPTER_JSON_PODSPEC_FILE_PATH="${ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH}.json"
           IRONSOURCE_SDK_VERSION="${{ github.event.inputs.ironsource_sdk_version }}"
 
           echo
@@ -49,12 +50,13 @@ jobs:
 
           echo
           echo "🔍 Generating podspec ${ADN_LEVELPLAY_ADAPTER_POD_NAME}..."
-          ./scripts/generate_podspec.sh ${OFFICIAL_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH} ${ADN_LEVELPLAY_ADAPTER_POD_NAME} ${IRONSOURCE_SDK_VERSION} > ${ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH}
+          ./scripts/generate_podspec.sh ${OFFICIAL_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH} ${ADN_LEVELPLAY_ADAPTER_POD_NAME} ${IRONSOURCE_SDK_VERSION}
           echo "✅ Podspec generated"
 
           echo
           echo "🔍 Linting podspec ${ADN_LEVELPLAY_ADAPTER_POD_NAME}..."
           pod spec lint ${ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH} --allow-warnings
+          pod spec lint ${ADN_LEVELPLAY_ADAPTER_JSON_PODSPEC_FILE_PATH} --allow-warnings
           echo "✅ Podspec linted"
           
           echo
@@ -65,7 +67,8 @@ jobs:
           echo
           echo "🧹 Cleaning up..."
           rm -f ${OFFICIAL_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH} \
-            ${ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH}
+            ${ADN_LEVELPLAY_ADAPTER_PODSPEC_FILE_PATH} \
+            ${ADN_LEVELPLAY_ADAPTER_JSON_PODSPEC_FILE_PATH}
           echo "✅ Cleaned up"
 
       - name: Setup Git User
@@ -76,11 +79,18 @@ jobs:
       - name: Commit Changes
         run: |
           git add .
-          
+
           if git diff --cached --quiet; then
             echo "No change to commit"
           else
-            git commit -m "Levelplay adapter podspec synced"
+            PODSPEC_VERSION=$(
+              git diff --cached --name-only | awk -F/ '/\.podspec$/ && NF >= 3 {print $(NF-1); exit}'
+            )
+            if [ -n "$PODSPEC_VERSION" ]; then
+              git commit -m "Levelplay adapter podspec synced (version $PODSPEC_VERSION)"
+            else
+              git commit -m "Levelplay adapter podspec synced"
+            fi
             git push
-          echo "✅ Changes pushed"
+            echo "✅ Changes pushed"
           fi
