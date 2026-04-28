@@ -56,7 +56,7 @@ jq \
   '
   .name = $name
   | .dependencies = {
-      "IronSourceSDK": ["= " + $iron],
+      "IronSourceSDK/Ads": ["= " + $iron],
       "VoodooAdn": [">= " + $adn]
     }
   ' \
@@ -128,7 +128,7 @@ source_block=$(
   fi
 
   echo
-  echo "  s.dependency 'IronSourceSDK', '= ${IRONSOURCE_SDK_VERSION}'"
+  echo "  s.dependency 'IronSourceSDK/Ads', '= ${IRONSOURCE_SDK_VERSION}'"
   echo "  s.dependency 'VoodooAdn', '>= ${ADN_SDK_VERSION}'"
   echo "end"
 } > "${PODSPEC_RUBY}"
