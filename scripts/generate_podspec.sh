@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DEFAULT_IRONSOURCE_SDK_VERSION="9.3.0.0"
-
 if [[ $# -lt 2 ]]; then
   SCRIPT_NAME=$(basename "$0")
-  echo "Usage: ${SCRIPT_NAME} <path_to_podspec_source> <pod_name> <ironsource_sdk_version=${DEFAULT_IRONSOURCE_SDK_VERSION}>"
+  echo "Usage: ${SCRIPT_NAME} <path_to_podspec_source> <pod_name>"
   echo
   echo "Arguments:"
   echo "  path_to_podspec_source: the original json podspec source file"
   echo "  pod_name: the name of the pod to generate the podspec for"
-  echo "  ironsource_sdk_version: the version of the IronSourceSDK to use (optional)"
   echo
   echo "Generates <pod_name>.podspec.json and <pod_name>.podspec in the current directory."
   echo
@@ -21,7 +18,6 @@ fi
 
 ORIGINAL_PODSPEC_FILE_PATH=$1
 POD_NAME=$2
-IRONSOURCE_SDK_VERSION="${3:-$DEFAULT_IRONSOURCE_SDK_VERSION}"
 
 # jq is required to parse the original podspec file
 if ! command -v jq >/dev/null 2>&1; then
@@ -32,6 +28,16 @@ fi
 # check if the original podspec file exists
 if [[ ! -f "${ORIGINAL_PODSPEC_FILE_PATH}" ]]; then
   echo "❌ Error: not a file: ${ORIGINAL_PODSPEC_FILE_PATH}" >&2
+  exit 1
+fi
+
+# get the IronSource SDK dependency from the original podspec file
+IRONSOURCE_ADS_DEPENDENCY=$(
+  jq -r '((.dependencies // {})["IronSourceSDK/Ads"] // []) | if length > 0 then .[0] else empty end' \
+    "${ORIGINAL_PODSPEC_FILE_PATH}"
+)
+if [[ -z "${IRONSOURCE_ADS_DEPENDENCY}" ]]; then
+  echo "❌ Error: IronSource SDK Ads dependency missing in JSON podspec file: ${ORIGINAL_PODSPEC_FILE_PATH}" >&2
   exit 1
 fi
 
@@ -51,12 +57,12 @@ fi
 PODSPEC_JSON="${POD_NAME}.podspec.json"
 jq \
   --arg name "${POD_NAME}" \
-  --arg iron "${IRONSOURCE_SDK_VERSION}" \
+  --arg iron "${IRONSOURCE_ADS_DEPENDENCY}" \
   --arg adn "${ADN_SDK_VERSION}" \
   '
   .name = $name
   | .dependencies = {
-      "IronSourceSDK/Ads": ["= " + $iron],
+      "IronSourceSDK/Ads": [$iron],
       "VoodooAdn": [">= " + $adn]
     }
   ' \
@@ -128,7 +134,7 @@ source_block=$(
   fi
 
   echo
-  echo "  s.dependency 'IronSourceSDK/Ads', '= ${IRONSOURCE_SDK_VERSION}'"
+  echo "  s.dependency 'IronSourceSDK/Ads', '${IRONSOURCE_ADS_DEPENDENCY}'"
   echo "  s.dependency 'VoodooAdn', '>= ${ADN_SDK_VERSION}'"
   echo "end"
 } > "${PODSPEC_RUBY}"
