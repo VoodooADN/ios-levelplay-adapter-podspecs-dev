@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = "VoodooIronSourceAdapter"
-  s.version = "5.0.0.0"
+  s.version = "5.0.0.2"
   s.summary = "Voodoo Adapter"
   s.description = "Use this adapter to show Voodoo ads"
   s.homepage = "http://www.is.com/"
