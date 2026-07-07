@@ -13,5 +13,5 @@ Pod::Spec.new do |s|
 	s.static_framework = true
 
 	s.dependency 'VoodooAdn', '~> 3.17.0'
-	s.dependency 'IronSourceSDK/Ads', '~> 9.3'
+	s.dependency 'IronSourceSDK/Ads', '>= 8.11.0.0'
 end
