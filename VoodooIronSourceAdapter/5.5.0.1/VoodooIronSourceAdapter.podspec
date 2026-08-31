@@ -25,5 +25,5 @@ Pod::Spec.new do |s|
   }
 
   s.dependency 'IronSourceSDK/Ads', '~> 9.0'
-  s.dependency 'VoodooAdn', '= 3.17.2'
+  s.dependency 'VoodooAdn', '= 3.17.2-ios13.1'
 end
